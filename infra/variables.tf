@@ -1,0 +1,53 @@
+# variables.tf (provider에서 사용할 최소 변수)
+variable "aws_region" {
+  type    = string
+  default = "ap-northeast-2"
+}
+
+variable "app_port" {
+  description = "Container port exposed by the backend service"
+  type        = number
+  default     = 8080
+}
+
+variable "db_port" {
+  description = "Database port (MySQL=3306, Postgres=5432)"
+  type        = number
+  default     = 3306
+}
+
+variable "backend_image_tag" {
+  description = "ECR image tag for backend container"
+  type        = string
+  default     = "latest"
+}
+
+variable "db_name" {
+  type    = string
+  default = "everywear"
+}
+
+variable "db_username" {
+  type    = string
+  default = "admin"
+}
+
+variable "db_password" {
+  type      = string
+  sensitive = true
+}
+
+variable "db_instance_class" {
+  type    = string
+  default = "db.t4g.micro"
+}
+
+variable "db_allocated_storage" {
+  type    = number
+  default = 20
+}
+
+variable "db_max_allocated_storage" {
+  type    = number
+  default = 50
+}
