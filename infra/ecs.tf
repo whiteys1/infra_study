@@ -45,6 +45,7 @@ resource "aws_ecs_task_definition" "backend" {
   memory                   = "512"
 
   execution_role_arn = aws_iam_role.ecs_task_execution.arn
+  task_role_arn      = aws_iam_role.ecs_task.arn  # Task Role 추가
 
   container_definitions = jsonencode([
     {
@@ -57,6 +58,38 @@ resource "aws_ecs_task_definition" "backend" {
           containerPort = var.app_port
           hostPort      = var.app_port
           protocol      = "tcp"
+        }
+      ]
+
+      # 환경 변수 추가
+      environment = [
+        {
+          name  = "DB_HOST"
+          value = aws_db_instance.mysql.address
+        },
+        {
+          name  = "DB_PORT"
+          value = tostring(aws_db_instance.mysql.port)
+        },
+        {
+          name  = "DB_NAME"
+          value = aws_db_instance.mysql.db_name
+        },
+        {
+          name  = "DB_USER"
+          value = var.db_username
+        },
+        {
+          name  = "DB_PASSWORD"
+          value = var.db_password
+        },
+        {
+          name  = "S3_BUCKET"
+          value = aws_s3_bucket.app.id
+        },
+        {
+          name  = "AWS_REGION"
+          value = var.aws_region
         }
       ]
 
