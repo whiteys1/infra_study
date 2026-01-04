@@ -23,17 +23,21 @@ resource "aws_lb_target_group" "app" {
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
 
-  # 개발 단계 기본 헬스체크(필요 시 경로/코드 수정)
+  # 헬스체크 설정 (60초 대기)
   health_check {
     enabled             = true
     protocol            = "HTTP"
     path                = "/"
     matcher             = "200-399"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
+    interval            = 30              # 30초마다 체크
+    timeout             = 10              # 응답 대기 10초
+    healthy_threshold   = 2               # 2번 연속 성공시 healthy
+    unhealthy_threshold = 3               # 3번 연속 실패시 unhealthy
   }
+  # 총 대기 시간: interval(30) * healthy_threshold(2) = 60초
+
+  # deregistration_delay 추가 (컨테이너 종료 시 연결 대기 시간)
+  deregistration_delay = 30
 
   tags = {
     Name = "dev-app-tg"

@@ -51,3 +51,35 @@ variable "db_max_allocated_storage" {
   type    = number
   default = 50
 }
+
+# JWT 관련 변수 추가
+variable "jwt_secret" {
+  type        = string
+  sensitive   = true
+  description = "JWT secret key for token signing"
+}
+
+variable "jwt_access_token_expiration" {
+  type        = number
+  default     = 3600000  # 1시간 (밀리초)
+  description = "JWT access token expiration time in milliseconds"
+}
+
+variable "jwt_refresh_token_expiration" {
+  type        = number
+  default     = 604800000  # 7일
+  description = "JWT refresh token expiration time in milliseconds"
+}
+
+# OAuth2 관련 변수 추가
+variable "kakao_client_id" {
+  type        = string
+  sensitive   = true
+  description = "Kakao OAuth2 client ID"
+}
+
+variable "kakao_client_secret" {
+  type        = string
+  sensitive   = true
+  description = "Kakao OAuth2 client secret"
+}

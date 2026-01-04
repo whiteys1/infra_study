@@ -45,7 +45,7 @@ resource "aws_ecs_task_definition" "backend" {
   memory                   = "512"
 
   execution_role_arn = aws_iam_role.ecs_task_execution.arn
-  task_role_arn      = aws_iam_role.ecs_task.arn  # Task Role 추가
+  task_role_arn      = aws_iam_role.ecs_task.arn
 
   container_definitions = jsonencode([
     {
@@ -90,6 +90,28 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "AWS_REGION"
           value = var.aws_region
+        },
+        # JWT 환경변수 추가
+        {
+          name  = "JWT_SECRET"
+          value = var.jwt_secret
+        },
+        {
+          name  = "JWT_ACCESS_TOKEN_EXPIRATION"
+          value = tostring(var.jwt_access_token_expiration)
+        },
+        {
+          name  = "JWT_REFRESH_TOKEN_EXPIRATION"
+          value = tostring(var.jwt_refresh_token_expiration)
+        },
+        # OAuth2 환경변수 추가
+        {
+          name  = "KAKAO_CLIENT_ID"
+          value = var.kakao_client_id
+        },
+        {
+          name  = "KAKAO_CLIENT_SECRET"
+          value = var.kakao_client_secret
         }
       ]
 
