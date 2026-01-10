@@ -64,17 +64,21 @@ resource "aws_ecs_task_definition" "backend" {
       # 환경 변수 추가
       environment = [
         {
-          name  = "DB_HOST"
-          value = aws_db_instance.mysql.address
+          name  = "DB_URL"
+          value = "jdbc:mysql://dev-mysql.c7a2aw6wem27.ap-northeast-2.rds.amazonaws.com:3306/everywear?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
         },
-        {
-          name  = "DB_PORT"
-          value = tostring(aws_db_instance.mysql.port)
-        },
-        {
-          name  = "DB_NAME"
-          value = aws_db_instance.mysql.db_name
-        },
+        # {
+        #   name  = "DB_HOST"
+        #   value = aws_db_instance.mysql.address
+        # },
+        # {
+        #   name  = "DB_PORT"
+        #   value = tostring(aws_db_instance.mysql.port)
+        # },
+        # {
+        #   name  = "DB_NAME"
+        #   value = aws_db_instance.mysql.db_name
+        # },
         {
           name  = "DB_USER"
           value = var.db_username
@@ -112,6 +116,10 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "KAKAO_CLIENT_SECRET"
           value = var.kakao_client_secret
+        },
+        {
+          name  = "KAKAO_ADMIN_KEY"
+          value = var.kakao_admin_key
         }
       ]
 

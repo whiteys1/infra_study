@@ -67,7 +67,7 @@ variable "jwt_access_token_expiration" {
 
 variable "jwt_refresh_token_expiration" {
   type        = number
-  default     = 604800000  # 7일
+  default     = 1209600000  # 7일
   description = "JWT refresh token expiration time in milliseconds"
 }
 
@@ -82,4 +82,10 @@ variable "kakao_client_secret" {
   type        = string
   sensitive   = true
   description = "Kakao OAuth2 client secret"
+}
+
+variable "kakao_admin_key" {
+  type        = string
+  sensitive   = true
+  description = "Kakao Admin Key"
 }
