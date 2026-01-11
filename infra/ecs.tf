@@ -11,7 +11,7 @@ resource "aws_ecs_cluster" "main" {
 
 resource "aws_cloudwatch_log_group" "ecs" {
   name              = "/ecs/dev-backend"
-  retention_in_days = 7
+  retention_in_days = 3
 }
 
 # ECS가 ECR에서 이미지 Pull, CloudWatch Logs로 로그 전송 등을 하기 위한 실행 역할
@@ -120,6 +120,11 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "KAKAO_ADMIN_KEY"
           value = var.kakao_admin_key
+        },
+        # Crawler 서비스 URL 추가
+        {
+          name  = "CRAWLER_SERVICE_URL"
+          value = "http://crawler.everywear.local:8001"
         }
       ]
 
@@ -154,5 +159,84 @@ resource "aws_ecs_service" "backend" {
     container_port   = var.app_port
   }
 
-  depends_on = [aws_lb_listener.http]
+  # Service Discovery 추가
+  service_registries {
+    registry_arn = aws_service_discovery_service.backend.arn
+  }
+
+  depends_on = [
+    aws_lb_listener.http,
+    aws_service_discovery_service.backend
+  ]
+}
+
+# Crawler용 CloudWatch Log Group
+resource "aws_cloudwatch_log_group" "crawler" {
+  name              = "/ecs/dev-crawler"
+  retention_in_days = 3
+}
+
+# Crawler Task Definition
+resource "aws_ecs_task_definition" "crawler" {
+  family                   = "dev-crawler"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "512"
+  memory                   = "1024"
+
+  execution_role_arn = aws_iam_role.ecs_task_execution.arn
+  task_role_arn      = aws_iam_role.ecs_task.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "crawler"
+      image     = "${aws_ecr_repository.crawler.repository_url}:${var.crawler_image_tag}"
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = 8001
+          hostPort      = 8001
+          protocol      = "tcp"
+        }
+      ]
+
+      environment = [
+        {
+          name  = "AWS_REGION"
+          value = var.aws_region
+        }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.crawler.name
+          awslogs-region        = var.aws_region
+          awslogs-stream-prefix = "ecs"
+        }
+      }
+    }
+  ])
+}
+
+# Crawler ECS Service (Service Discovery 연결)
+resource "aws_ecs_service" "crawler" {
+  name            = "dev-crawler-svc"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.crawler.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = [aws_subnet.public_a.id, aws_subnet.public_c.id]
+    security_groups  = [aws_security_group.ecs_task.id]
+    assign_public_ip = true
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.crawler.arn
+  }
+
+  depends_on = [aws_service_discovery_service.crawler]
 }

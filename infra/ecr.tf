@@ -35,3 +35,38 @@ resource "aws_ecr_lifecycle_policy" "backend" {
     ]
   })
 }
+
+# Crawler 컨테이너 이미지를 올릴 ECR 리포지토리
+resource "aws_ecr_repository" "crawler" {
+  name                 = "dev-crawler"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = {
+    Name = "dev-crawler"
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "crawler" {
+  repository = aws_ecr_repository.crawler.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Keep last 10 images"
+        selection = {
+          tagStatus   = "any"
+          countType   = "imageCountMoreThan"
+          countNumber = 10
+        }
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+}

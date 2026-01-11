@@ -29,10 +29,10 @@ resource "aws_lb_target_group" "app" {
     protocol            = "HTTP"
     path                = "/"
     matcher             = "200-399"
-    interval            = 30              # 30초마다 체크
+    interval            = 60              # 30초마다 체크
     timeout             = 10              # 응답 대기 10초
     healthy_threshold   = 2               # 2번 연속 성공시 healthy
-    unhealthy_threshold = 3               # 3번 연속 실패시 unhealthy
+    unhealthy_threshold = 5               # 3번 연속 실패시 unhealthy
   }
   # 총 대기 시간: interval(30) * healthy_threshold(2) = 60초
 

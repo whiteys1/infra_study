@@ -39,7 +39,7 @@ variable "db_password" {
 
 variable "db_instance_class" {
   type    = string
-  default = "db.t4g.micro"
+  default = "db.t3.micro"
 }
 
 variable "db_allocated_storage" {
@@ -88,4 +88,10 @@ variable "kakao_admin_key" {
   type        = string
   sensitive   = true
   description = "Kakao Admin Key"
+}
+
+variable "crawler_image_tag" {
+  description = "ECR image tag for crawler container"
+  type        = string
+  default     = "latest"
 }

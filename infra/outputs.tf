@@ -26,3 +26,15 @@ output "s3_bucket_name" {
 output "s3_bucket_arn" {
   value = aws_s3_bucket.app.arn
 }
+
+output "ecr_crawler_repository_url" {
+  value = aws_ecr_repository.crawler.repository_url
+}
+
+output "service_discovery_namespace" {
+  value = aws_service_discovery_private_dns_namespace.main.name
+}
+
+output "crawler_service_url" {
+  value = "http://crawler.everywear.local:8001"
+}
