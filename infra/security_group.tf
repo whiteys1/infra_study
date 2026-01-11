@@ -39,10 +39,20 @@ resource "aws_security_group" "ecs_task" {
   description = "Dev ECS Task SG: allow inbound only from ALB"
   vpc_id      = aws_vpc.main.id
 
+  # Backend 포트
   ingress {
     description     = "App port from ALB"
     from_port       = var.app_port
     to_port         = var.app_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  # Crawler 포트 추가
+  ingress {
+    description     = "Crawler port from ALB"
+    from_port       = 8001
+    to_port         = 8001
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }
@@ -60,6 +70,7 @@ resource "aws_security_group" "ecs_task" {
     Name = "dev-ecs-task-sg"
   }
 }
+
 
 # 3) RDS Security Group
 # - 개발 단계: DB 포트만 열고(0.0.0.0/0), 그 외는 차단

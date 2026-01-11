@@ -220,7 +220,6 @@ resource "aws_ecs_task_definition" "crawler" {
   ])
 }
 
-# Crawler ECS Service (Service Discovery 연결)
 resource "aws_ecs_service" "crawler" {
   name            = "dev-crawler-svc"
   cluster         = aws_ecs_cluster.main.id
@@ -234,9 +233,19 @@ resource "aws_ecs_service" "crawler" {
     assign_public_ip = true
   }
 
+  # Load Balancer 연결 추가
+  load_balancer {
+    target_group_arn = aws_lb_target_group.crawler.arn
+    container_name   = "crawler"
+    container_port   = 8001
+  }
+
   service_registries {
     registry_arn = aws_service_discovery_service.crawler.arn
   }
 
-  depends_on = [aws_service_discovery_service.crawler]
+  depends_on = [
+    aws_lb_listener.http,
+    aws_service_discovery_service.crawler
+  ]
 }
