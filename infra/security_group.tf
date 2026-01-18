@@ -102,3 +102,14 @@ resource "aws_security_group" "rds" {
     Name = "dev-rds-sg"
   }
 }
+
+# ECS 태스크 간 내부 통신 허용 (Service Discovery용)
+resource "aws_security_group_rule" "ecs_task_internal_crawler" {
+  type              = "ingress"
+  description       = "Allow crawler port from same security group (for service discovery)"
+  from_port         = 8001
+  to_port           = 8001
+  protocol          = "tcp"
+  security_group_id = aws_security_group.ecs_task.id
+  source_security_group_id = aws_security_group.ecs_task.id  # 자기 자신을 소스로
+}

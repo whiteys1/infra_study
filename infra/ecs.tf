@@ -121,9 +121,18 @@ resource "aws_ecs_task_definition" "backend" {
           name  = "KAKAO_ADMIN_KEY"
           value = var.kakao_admin_key
         },
+        # Google OAuth2 환경변수 추가
+        {
+          name  = "GOOGLE_CLIENT_ID"
+          value = var.google_client_id
+        },
+        {
+          name  = "GOOGLE_CLIENT_SECRET"
+          value = var.google_client_secret
+        },
         # Crawler 서비스 URL 추가
         {
-          name  = "CRAWLER_SERVICE_URL"
+          name  = "FASTAPI_BASE_URL"
           value = "http://crawler.everywear.local:8001"
         }
       ]

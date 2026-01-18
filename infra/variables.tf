@@ -95,3 +95,23 @@ variable "crawler_image_tag" {
   type        = string
   default     = "latest"
 }
+
+# crawler 관련 변수
+variable "fastapi_base_url" {
+  type        = string
+  default     = "http://crawler.everywear.local:8001"
+  description = "FastAPI crawler service URL (using Service Discovery)"
+}
+
+# Google OAuth2 관련 변수 추가
+variable "google_client_id" {
+  type        = string
+  sensitive   = true
+  description = "Google OAuth2 client ID"
+}
+
+variable "google_client_secret" {
+  type        = string
+  sensitive   = true
+  description = "Google OAuth2 client secret"
+}
