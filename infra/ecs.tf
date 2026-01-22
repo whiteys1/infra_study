@@ -214,6 +214,10 @@ resource "aws_ecs_task_definition" "crawler" {
         {
           name  = "AWS_REGION"
           value = var.aws_region
+        },
+        {
+          name  = "DATABASE_URL"
+          value = "mysql://${var.db_username}:${var.db_password}@${aws_db_instance.mysql.address}:3306/${var.db_name}?charset=utf8mb4"
         }
       ]
 
