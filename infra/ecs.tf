@@ -134,6 +134,10 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "FASTAPI_BASE_URL"
           value = "http://crawler.everywear.local:8001"
+        },
+        {
+          name  = "GEMINI_API_KEY"
+          value = var.gemini_api_key_backend
         }
       ]
 
@@ -218,6 +222,10 @@ resource "aws_ecs_task_definition" "crawler" {
         {
           name  = "DATABASE_URL"
           value = "mysql://${var.db_username}:${var.db_password}@${aws_db_instance.mysql.address}:3306/${var.db_name}?charset=utf8mb4"
+        },
+        {
+          name  = "GEMINI_API_KEY"
+          value = var.gemini_api_key_crawler
         }
       ]
 

@@ -115,3 +115,15 @@ variable "google_client_secret" {
   sensitive   = true
   description = "Google OAuth2 client secret"
 }
+
+variable "gemini_api_key_backend" {
+  type        = string
+  sensitive   = true
+  description = "Google Gemini API Key for Backend"
+}
+
+variable "gemini_api_key_crawler" {
+  type        = string
+  sensitive   = true
+  description = "Google Gemini API Key for Crawler"
+}

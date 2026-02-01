@@ -11,6 +11,8 @@ resource "aws_lb" "app" {
   security_groups = [aws_security_group.alb.id]
   subnets         = [aws_subnet.public_a.id, aws_subnet.public_c.id]
 
+  idle_timeout = 180
+
   tags = {
     Name = "dev-app-alb"
   }
