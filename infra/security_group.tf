@@ -1,8 +1,6 @@
 # security_group.tf
 
 # 1) ALB Security Group
-# - 인터넷(0.0.0.0/0)에서 HTTP(80) 접근 허용
-# - 아웃바운드는 전체 허용(기본)
 resource "aws_security_group" "alb" {
   name        = "dev-alb-sg"
   description = "Dev ALB SG: allow inbound HTTP from anywhere"
@@ -31,15 +29,12 @@ resource "aws_security_group" "alb" {
   }
 }
 
-# 2) ECS Task Security Group
-# - 인바운드는 ALB SG에서만(컨테이너 포트는 변수로)
-# - 아웃바운드는 전체 허용(외부 API 호출 필요)
-resource "aws_security_group" "ecs_task" {
-  name        = "dev-ecs-task-sg"
-  description = "Dev ECS Task SG: allow inbound only from ALB"
+# ⭐ 2) Backend Security Group (신규)
+resource "aws_security_group" "backend" {
+  name        = "dev-backend-sg"
+  description = "Dev Backend SG: allow inbound from ALB"
   vpc_id      = aws_vpc.main.id
 
-  # Backend 포트
   ingress {
     description     = "App port from ALB"
     from_port       = var.app_port
@@ -48,17 +43,8 @@ resource "aws_security_group" "ecs_task" {
     security_groups = [aws_security_group.alb.id]
   }
 
-  # Crawler 포트 추가
-  ingress {
-    description     = "Crawler port from ALB"
-    from_port       = 8001
-    to_port         = 8001
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-  }
-
   egress {
-    description      = "All outbound (external API calls)"
+    description      = "All outbound (to call crawler and external APIs)"
     from_port        = 0
     to_port          = 0
     protocol         = "-1"
@@ -67,14 +53,48 @@ resource "aws_security_group" "ecs_task" {
   }
 
   tags = {
-    Name = "dev-ecs-task-sg"
+    Name = "dev-backend-sg"
   }
 }
 
+# ⭐ 3) Crawler Security Group (신규)
+resource "aws_security_group" "crawler" {
+  name        = "dev-crawler-sg"
+  description = "Dev Crawler SG: allow inbound from ALB and Backend"
+  vpc_id      = aws_vpc.main.id
 
-# 3) RDS Security Group
-# - 개발 단계: DB 포트만 열고(0.0.0.0/0), 그 외는 차단
-# - (권장 구성은 ECS SG만 허용이지만, 요청하신 전제대로 전체 IP 허용)
+  ingress {
+    description     = "Crawler port from ALB (health check)"
+    from_port       = 8001
+    to_port         = 8001
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  # ⭐⭐⭐ 핵심: 백엔드에서 크롤러로 직접 통신 허용
+  ingress {
+    description     = "Crawler port from backend (crawling requests)"
+    from_port       = 8001
+    to_port         = 8001
+    protocol        = "tcp"
+    security_groups = [aws_security_group.backend.id]
+  }
+
+  egress {
+    description      = "All outbound (to crawl external websites)"
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "dev-crawler-sg"
+  }
+}
+
+# 4) RDS Security Group - ⭐ 그대로 유지
 resource "aws_security_group" "rds" {
   name        = "dev-rds-sg"
   description = "Dev RDS SG: allow DB port from anywhere (dev only)"
@@ -101,15 +121,4 @@ resource "aws_security_group" "rds" {
   tags = {
     Name = "dev-rds-sg"
   }
-}
-
-# ECS 태스크 간 내부 통신 허용 (Service Discovery용)
-resource "aws_security_group_rule" "ecs_task_internal_crawler" {
-  type              = "ingress"
-  description       = "Allow crawler port from same security group (for service discovery)"
-  from_port         = 8001
-  to_port           = 8001
-  protocol          = "tcp"
-  security_group_id = aws_security_group.ecs_task.id
-  source_security_group_id = aws_security_group.ecs_task.id  # 자기 자신을 소스로
 }

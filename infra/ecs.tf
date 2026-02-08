@@ -61,24 +61,11 @@ resource "aws_ecs_task_definition" "backend" {
         }
       ]
 
-      # 환경 변수 추가
       environment = [
         {
           name  = "DB_URL"
           value = "jdbc:mysql://dev-mysql.c7a2aw6wem27.ap-northeast-2.rds.amazonaws.com:3306/everywear?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
         },
-        # {
-        #   name  = "DB_HOST"
-        #   value = aws_db_instance.mysql.address
-        # },
-        # {
-        #   name  = "DB_PORT"
-        #   value = tostring(aws_db_instance.mysql.port)
-        # },
-        # {
-        #   name  = "DB_NAME"
-        #   value = aws_db_instance.mysql.db_name
-        # },
         {
           name  = "DB_USER"
           value = var.db_username
@@ -95,7 +82,6 @@ resource "aws_ecs_task_definition" "backend" {
           name  = "AWS_REGION"
           value = var.aws_region
         },
-        # JWT 환경변수 추가
         {
           name  = "JWT_SECRET"
           value = var.jwt_secret
@@ -108,7 +94,6 @@ resource "aws_ecs_task_definition" "backend" {
           name  = "JWT_REFRESH_TOKEN_EXPIRATION"
           value = tostring(var.jwt_refresh_token_expiration)
         },
-        # OAuth2 환경변수 추가
         {
           name  = "KAKAO_CLIENT_ID"
           value = var.kakao_client_id
@@ -121,7 +106,6 @@ resource "aws_ecs_task_definition" "backend" {
           name  = "KAKAO_ADMIN_KEY"
           value = var.kakao_admin_key
         },
-        # Google OAuth2 환경변수 추가
         {
           name  = "GOOGLE_CLIENT_ID"
           value = var.google_client_id
@@ -130,7 +114,6 @@ resource "aws_ecs_task_definition" "backend" {
           name  = "GOOGLE_CLIENT_SECRET"
           value = var.google_client_secret
         },
-        # Crawler 서비스 URL 추가
         {
           name  = "FASTAPI_BASE_URL"
           value = "http://crawler.everywear.local:8001"
@@ -138,6 +121,10 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "GEMINI_API_KEY"
           value = var.gemini_api_key_backend
+        },
+        {
+          name  = "GPT_API_KEY"
+          value = var.gpt_api_key
         }
       ]
 
@@ -162,7 +149,7 @@ resource "aws_ecs_service" "backend" {
 
   network_configuration {
     subnets          = [aws_subnet.public_a.id, aws_subnet.public_c.id]
-    security_groups  = [aws_security_group.ecs_task.id]
+    security_groups  = [aws_security_group.backend.id]
     assign_public_ip = true
   }
 
@@ -172,10 +159,15 @@ resource "aws_ecs_service" "backend" {
     container_port   = var.app_port
   }
 
-  # Service Discovery 추가
   service_registries {
     registry_arn = aws_service_discovery_service.backend.arn
   }
+
+  # ⭐ deployment_configuration와 health_check_grace_period_seconds는 load_balancer가 있을 때만 함께 사용
+  deployment_minimum_healthy_percent = 100
+  deployment_maximum_percent         = 200
+  
+  health_check_grace_period_seconds = 60
 
   depends_on = [
     aws_lb_listener.http,
@@ -250,11 +242,10 @@ resource "aws_ecs_service" "crawler" {
 
   network_configuration {
     subnets          = [aws_subnet.public_a.id, aws_subnet.public_c.id]
-    security_groups  = [aws_security_group.ecs_task.id]
+    security_groups  = [aws_security_group.crawler.id]
     assign_public_ip = true
   }
 
-  # Load Balancer 연결 추가
   load_balancer {
     target_group_arn = aws_lb_target_group.crawler.arn
     container_name   = "crawler"
@@ -264,6 +255,11 @@ resource "aws_ecs_service" "crawler" {
   service_registries {
     registry_arn = aws_service_discovery_service.crawler.arn
   }
+
+  deployment_minimum_healthy_percent = 100
+  deployment_maximum_percent         = 200
+
+  health_check_grace_period_seconds = 60
 
   depends_on = [
     aws_lb_listener.http,

@@ -127,3 +127,9 @@ variable "gemini_api_key_crawler" {
   sensitive   = true
   description = "Google Gemini API Key for Crawler"
 }
+
+variable "gpt_api_key" {
+  type        = string
+  sensitive   = true
+  description = "OpenAI GPT API Key"
+}
