@@ -83,6 +83,10 @@ resource "aws_ecs_task_definition" "backend" {
           value = var.aws_region
         },
         {
+          name  = "SQS_CRAWLING_QUEUE_URL"
+          value = aws_sqs_queue.crawling_request.url
+        },
+        {
           name  = "JWT_SECRET"
           value = var.jwt_secret
         },
@@ -123,7 +127,7 @@ resource "aws_ecs_task_definition" "backend" {
           value = var.gemini_api_key_backend
         },
         {
-          name  = "GPT_API_KEY"
+          name  = "OPENAI_API_KEY"
           value = var.gpt_api_key
         }
       ]
@@ -214,6 +218,10 @@ resource "aws_ecs_task_definition" "crawler" {
         {
           name  = "DATABASE_URL"
           value = "mysql://${var.db_username}:${var.db_password}@${aws_db_instance.mysql.address}:3306/${var.db_name}?charset=utf8mb4"
+        },
+        {
+          name  = "SQS_CRAWLING_QUEUE_URL"
+          value = aws_sqs_queue.crawling_request.url
         },
         {
           name  = "GEMINI_API_KEY"
