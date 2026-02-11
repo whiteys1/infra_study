@@ -167,6 +167,12 @@ resource "aws_ecs_service" "backend" {
     registry_arn = aws_service_discovery_service.backend.arn
   }
 
+  lifecycle {
+    ignore_changes = [
+      task_definition, # CI/CD에서 업데이트한 태스크 정의 버전을 Terraform이 무시하도록 설정
+    ]
+  }
+
   # ⭐ deployment_configuration와 health_check_grace_period_seconds는 load_balancer가 있을 때만 함께 사용
   deployment_minimum_healthy_percent = 100
   deployment_maximum_percent         = 200
@@ -262,6 +268,12 @@ resource "aws_ecs_service" "crawler" {
 
   service_registries {
     registry_arn = aws_service_discovery_service.crawler.arn
+  }
+
+  lifecycle {
+    ignore_changes = [
+      task_definition, # CI/CD에서 업데이트한 태스크 정의 버전을 Terraform이 무시하도록 설정
+    ]
   }
 
   deployment_minimum_healthy_percent = 100

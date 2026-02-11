@@ -9,6 +9,19 @@ resource "aws_s3_bucket" "app" {
   }
 }
 
+# S3 CORS 설정 리소스 분리
+resource "aws_s3_bucket_cors_configuration" "app" {
+  bucket = aws_s3_bucket.app.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST", "DELETE", "HEAD"]
+    allowed_origins = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+
 resource "aws_s3_bucket_versioning" "app" {
   bucket = aws_s3_bucket.app.id
 

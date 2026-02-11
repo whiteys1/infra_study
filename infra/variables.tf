@@ -133,3 +133,13 @@ variable "gpt_api_key" {
   sensitive   = true
   description = "OpenAI GPT API Key"
 }
+
+variable "domain_name" {
+  type    = string
+  default = "everywear.cloud"
+}
+
+variable "api_subdomain" {
+  type    = string
+  default = "api.everywear.cloud"
+}
