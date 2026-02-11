@@ -143,3 +143,9 @@ variable "api_subdomain" {
   type    = string
   default = "api.everywear.cloud"
 }
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "production"
+}
