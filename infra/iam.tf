@@ -47,8 +47,7 @@ resource "aws_iam_role_policy" "ecs_task_s3" {
   })
 }
 
-# ECS Task Role에 SQS 접근 정책 추가
-
+# ECS Task Role에 SQS 접근 정책 수정
 resource "aws_iam_role_policy" "ecs_task_sqs" {
   name = "dev-ecs-task-sqs-policy"
   role = aws_iam_role.ecs_task.id
@@ -69,7 +68,9 @@ resource "aws_iam_role_policy" "ecs_task_sqs" {
         ]
         Resource = [
           aws_sqs_queue.crawling_request.arn,
-          aws_sqs_queue.crawling_dlq.arn
+          aws_sqs_queue.crawling_dlq.arn,
+          aws_sqs_queue.fitting_request.arn,
+          aws_sqs_queue.fitting_dlq.arn
         ]
       }
     ]

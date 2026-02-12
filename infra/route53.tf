@@ -66,6 +66,14 @@ resource "aws_route53_record" "api" {
   }
 }
 
+resource "aws_route53_record" "www" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "www"
+  type    = "CNAME"
+  ttl     = 300
+  records = ["cname.vercel-dns.com"]
+}
+
 # 출력
 output "route53_name_servers" {
   description = "Route 53 Name Servers for domain registration"
