@@ -271,18 +271,43 @@ resource "aws_ecs_service" "crawler" {
   }
 
   lifecycle {
-    ignore_changes = [
-      task_definition, # CI/CD에서 업데이트한 태스크 정의 버전을 Terraform이 무시하도록 설정
-    ]
+    ignore_changes = [task_definition, desired_count]
   }
 
   deployment_minimum_healthy_percent = 100
   deployment_maximum_percent         = 200
-
-  health_check_grace_period_seconds = 60
+  health_check_grace_period_seconds  = 60
 
   depends_on = [
-    aws_lb_listener.http,
+    aws_lb_listener.crawler_http,
     aws_service_discovery_service.crawler
   ]
+}
+
+# ============================================================
+# 크롤러 Auto Scaling
+# ============================================================
+resource "aws_appautoscaling_target" "crawler" {
+  max_capacity       = 5
+  min_capacity       = 1
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.crawler.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "crawler_cpu" {
+  name               = "dev-crawler-cpu-scaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.crawler.resource_id
+  scalable_dimension = aws_appautoscaling_target.crawler.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.crawler.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value       = 60.0
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 60
+  }
 }

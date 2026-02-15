@@ -38,3 +38,13 @@ output "service_discovery_namespace" {
 output "crawler_service_url" {
   value = "http://crawler.everywear.local:8001"
 }
+
+output "crawler_service_url" {
+  value       = "http://${aws_lb.crawler.dns_name}:8001"
+  description = "Crawler Internal ALB URL (VPC 내부 전용)"
+}
+
+output "crawler_alb_dns" {
+  value       = aws_lb.crawler.dns_name
+  description = "GitHub Secret FASTAPI_BASE_URL에 사용할 값"
+}

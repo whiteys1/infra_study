@@ -1,22 +1,17 @@
 # alb.tf
-# - Internet-facing ALB
-# - Target Group (type = ip)
-# - HTTP → HTTPS 리디렉션
-# - HTTPS Listener
 
+# ============================================================
+# 외부 ALB (Internet-facing) - 백엔드 전용
+# ============================================================
 resource "aws_lb" "app" {
   name               = "dev-app-alb"
   internal           = false
   load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = [aws_subnet.public_a.id, aws_subnet.public_c.id]
+  idle_timeout       = 180
 
-  security_groups = [aws_security_group.alb.id]
-  subnets         = [aws_subnet.public_a.id, aws_subnet.public_c.id]
-
-  idle_timeout = 180
-
-  tags = {
-    Name = "dev-app-alb"
-  }
+  tags = { Name = "dev-app-alb" }
 }
 
 resource "aws_lb_target_group" "app" {
@@ -38,13 +33,10 @@ resource "aws_lb_target_group" "app" {
   }
 
   deregistration_delay = 30
-
-  tags = {
-    Name = "dev-app-tg"
-  }
+  tags = { Name = "dev-app-tg" }
 }
 
-# HTTP Listener - HTTPS로 리디렉션
+# HTTP → HTTPS 리디렉션
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.app.arn
   port              = 80
@@ -52,7 +44,6 @@ resource "aws_lb_listener" "http" {
 
   default_action {
     type = "redirect"
-
     redirect {
       port        = "443"
       protocol    = "HTTPS"
@@ -61,7 +52,7 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# HTTPS Listener
+# HTTPS Listener (백엔드 전용, 크롤러 rule 제거)
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.app.arn
   port              = "443"
@@ -75,24 +66,20 @@ resource "aws_lb_listener" "https" {
   }
 }
 
-# Crawler 경로 라우팅 규칙 (HTTPS용)
-resource "aws_lb_listener_rule" "crawler_https" {
-  listener_arn = aws_lb_listener.https.arn
-  priority     = 100
+# ============================================================
+# 크롤러 Internal ALB (VPC 내부 전용)
+# ============================================================
+resource "aws_lb" "crawler" {
+  name               = "dev-crawler-internal-alb"
+  internal           = true   # 외부 접근 차단, VPC 내부 전용
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.crawler_alb.id]
+  subnets            = [aws_subnet.public_a.id, aws_subnet.public_c.id]
+  idle_timeout       = 180    # 크롤링 처리 시간 고려
 
-  condition {
-    path_pattern {
-      values = ["/crawler/*"]
-    }
-  }
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.crawler.arn
-  }
+  tags = { Name = "dev-crawler-internal-alb" }
 }
 
-# 크롤러용 Target Group
 resource "aws_lb_target_group" "crawler" {
   name        = "dev-crawler-tg"
   port        = 8001
@@ -112,8 +99,17 @@ resource "aws_lb_target_group" "crawler" {
   }
 
   deregistration_delay = 30
+  tags = { Name = "dev-crawler-tg" }
+}
 
-  tags = {
-    Name = "dev-crawler-tg"
+# 크롤러 Internal ALB Listener (HTTP, 포트 8001)
+resource "aws_lb_listener" "crawler_http" {
+  load_balancer_arn = aws_lb.crawler.arn
+  port              = 8001
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.crawler.arn
   }
 }
