@@ -35,9 +35,9 @@ output "service_discovery_namespace" {
   value = aws_service_discovery_private_dns_namespace.main.name
 }
 
-output "crawler_service_url" {
-  value = "http://crawler.everywear.local:8001"
-}
+# output "crawler_service_url" {
+#   value = "http://crawler.everywear.local:8001"
+# }
 
 output "crawler_service_url" {
   value       = "http://${aws_lb.crawler.dns_name}:8001"

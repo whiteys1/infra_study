@@ -15,7 +15,6 @@ resource "aws_security_group" "alb" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-  # HTTPS 추가
   ingress {
     description      = "HTTPS from anywhere"
     from_port        = 443
@@ -39,7 +38,7 @@ resource "aws_security_group" "alb" {
   }
 }
 
-# 2) 크롤러 Internal ALB Security Group (신규)
+# 2) 크롤러 Internal ALB Security Group
 resource "aws_security_group" "crawler_alb" {
   name        = "dev-crawler-alb-sg"
   description = "Crawler Internal ALB SG: allow inbound from backend only"
@@ -63,7 +62,7 @@ resource "aws_security_group" "crawler_alb" {
   tags = { Name = "dev-crawler-alb-sg" }
 }
 
-# ⭐ 2) Backend Security Group (신규)
+# 3) Backend Security Group
 resource "aws_security_group" "backend" {
   name        = "dev-backend-sg"
   description = "Dev Backend SG: allow inbound from ALB"
@@ -91,27 +90,21 @@ resource "aws_security_group" "backend" {
   }
 }
 
-# ⭐ 3) Crawler Security Group (신규)
+# 4) Crawler Security Group
 resource "aws_security_group" "crawler" {
   name        = "dev-crawler-sg"
-  description = "Dev Crawler SG: allow inbound from ALB and Backend"
+  description = "Dev Crawler SG: allow inbound from crawler Internal ALB only"
   vpc_id      = aws_vpc.main.id
 
+  # 외부 ALB SG 직접 참조 제거
+  # 백엔드 SG 직접 참조 제거
+  # Internal ALB SG에서만 수신
   ingress {
-    description     = "Crawler port from ALB (health check)"
+    description     = "From crawler internal ALB only"
     from_port       = 8001
     to_port         = 8001
     protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-  }
-
-  # ⭐⭐⭐ 핵심: 백엔드에서 크롤러로 직접 통신 허용
-  ingress {
-    description     = "Crawler port from backend (crawling requests)"
-    from_port       = 8001
-    to_port         = 8001
-    protocol        = "tcp"
-    security_groups = [aws_security_group.backend.id]
+    security_groups = [aws_security_group.crawler_alb.id]
   }
 
   egress {
@@ -128,7 +121,7 @@ resource "aws_security_group" "crawler" {
   }
 }
 
-# 4) RDS Security Group - ⭐ 그대로 유지
+# 5) RDS Security Group
 resource "aws_security_group" "rds" {
   name        = "dev-rds-sg"
   description = "Dev RDS SG: allow DB port from anywhere (dev only)"

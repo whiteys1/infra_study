@@ -120,7 +120,7 @@ resource "aws_ecs_task_definition" "backend" {
         },
         {
           name  = "FASTAPI_BASE_URL"
-          value = "http://crawler.everywear.local:8001"
+          value = "http://${aws_lb.crawler.dns_name}:8001"
         },
         {
           name  = "GEMINI_API_KEY"
