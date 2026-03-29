@@ -67,8 +67,8 @@ resource "aws_iam_role_policy" "ecs_task_sqs" {
           "sqs:ChangeMessageVisibility"
         ]
         Resource = [
-          aws_sqs_queue.crawling_request.arn,
-          aws_sqs_queue.crawling_dlq.arn,
+          # aws_sqs_queue.crawling_request.arn,
+          # aws_sqs_queue.crawling_dlq.arn,
           aws_sqs_queue.fitting_request.arn,
           aws_sqs_queue.fitting_dlq.arn
         ]

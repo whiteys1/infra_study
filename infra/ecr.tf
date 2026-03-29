@@ -12,6 +12,7 @@ resource "aws_ecr_repository" "backend" {
   tags = {
     Name = "dev-backend"
   }
+  force_delete = true
 }
 
 # 최신 아닌 이미지 자동 정리(개발용)
@@ -48,6 +49,8 @@ resource "aws_ecr_repository" "crawler" {
   tags = {
     Name = "dev-crawler"
   }
+
+  force_delete = true
 }
 
 resource "aws_ecr_lifecycle_policy" "crawler" {

@@ -82,10 +82,10 @@ resource "aws_ecs_task_definition" "backend" {
           name  = "AWS_REGION"
           value = var.aws_region
         },
-        {
-          name  = "SQS_CRAWLING_QUEUE_URL"
-          value = aws_sqs_queue.crawling_request.url
-        },
+        # {
+        #   name  = "SQS_CRAWLING_QUEUE_URL"
+        #   value = aws_sqs_queue.crawling_request.url
+        # },
         {
           name  = "JWT_SECRET"
           value = var.jwt_secret
@@ -225,10 +225,10 @@ resource "aws_ecs_task_definition" "crawler" {
           name  = "DATABASE_URL"
           value = "mysql://${var.db_username}:${var.db_password}@${aws_db_instance.mysql.address}:3306/${var.db_name}?charset=utf8mb4"
         },
-        {
-          name  = "SQS_CRAWLING_QUEUE_URL"
-          value = aws_sqs_queue.crawling_request.url
-        },
+        # {
+        #   name  = "SQS_CRAWLING_QUEUE_URL"
+        #   value = aws_sqs_queue.crawling_request.url
+        # },
         {
           name  = "GEMINI_API_KEY"
           value = var.gemini_api_key_crawler
@@ -251,7 +251,7 @@ resource "aws_ecs_service" "crawler" {
   name            = "dev-crawler-svc"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.crawler.arn
-  desired_count   = 1
+  desired_count   = 3
   launch_type     = "FARGATE"
 
   network_configuration {
@@ -289,14 +289,14 @@ resource "aws_ecs_service" "crawler" {
 # ============================================================
 resource "aws_appautoscaling_target" "crawler" {
   max_capacity       = 5
-  min_capacity       = 1
+  min_capacity       = 3
   resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.crawler.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
 }
 
-resource "aws_appautoscaling_policy" "crawler_cpu" {
-  name               = "dev-crawler-cpu-scaling"
+resource "aws_appautoscaling_policy" "crawler_memory" {
+  name               = "dev-crawler-memory-scaling"
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.crawler.resource_id
   scalable_dimension = aws_appautoscaling_target.crawler.scalable_dimension
@@ -304,7 +304,7 @@ resource "aws_appautoscaling_policy" "crawler_cpu" {
 
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
-      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
     target_value       = 60.0
     scale_in_cooldown  = 300

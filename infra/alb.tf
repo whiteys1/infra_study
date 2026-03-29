@@ -86,6 +86,7 @@ resource "aws_lb_target_group" "crawler" {
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
+  load_balancing_algorithm_type = "least_outstanding_requests"
 
   health_check {
     enabled             = true
